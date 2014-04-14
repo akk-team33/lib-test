@@ -52,8 +52,8 @@ public class TextualTest {
     public final void testFromIterable() throws Exception {
         Assert.assertEquals(
                 EXPECTED_01,
-                textual().from(asList(A_STRING, INT_278, DOUBLE_PI, null, true, CHAR_C, CHAR_Q, CHAR_BS,
-                                asList(true, emptyList(), singletonList(DOUBLE_PI), asList(1,2,3)), A_DATE))
+                textual().valueOf(asList(A_STRING, INT_278, DOUBLE_PI, null, true, CHAR_C, CHAR_Q, CHAR_BS,
+                        asList(true, emptyList(), singletonList(DOUBLE_PI), asList(1, 2, 3)), A_DATE))
         );
     }
 

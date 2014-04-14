@@ -36,7 +36,7 @@ public class Textual {
         }
     }
 
-    public final String from(final Iterable<?> subject) {
+    public final String valueOf(final Object subject) {
         final StringBuilder target = new StringBuilder(0);
         build(subject, 0, target);
         return target.toString();
