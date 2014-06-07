@@ -7,7 +7,7 @@ import java.util.Objects;
 
 public class Reporter {
 
-    private List<Object> report = new LinkedList<>();
+    private final List<Object> report = new LinkedList<>();
 
     public static <S> Report test(final Iterable<S> subjects, final Tester<? super S> tester) {
         return test(subjects.iterator(), tester);
