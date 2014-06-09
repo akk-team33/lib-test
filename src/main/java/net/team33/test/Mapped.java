@@ -11,6 +11,12 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
 
+/**
+ * A generic implementation of an immutable data object with its properties represented by a specific
+ * {@link Set} of keys and backed by a {@link Map} {@linkplain Map#keySet() containing} any of those keys.
+ *
+ * @param <K> The specific type of the keys representing the properties.
+ */
 @SuppressWarnings("UnusedDeclaration")
 public class Mapped<K extends Mapped.Key> {
 
@@ -21,40 +27,94 @@ public class Mapped<K extends Mapped.Key> {
 
     private final Map<K, Object> backing;
 
-    public Mapped(final Set<K> keySet, final Map<? extends K, ?> origin) throws IllegalArgumentException {
-        this(keySet, origin, false);
+    /**
+     * Initiates an instance directly through a given {@link Set} of keys representing its properties
+     * and an original {@link Map} containing the presumed values for those properties.
+     * <p/>
+     * The original map may NOT contain keys not present in the given set of keys.
+     *
+     * @param keys   Not {@code null}. May be empty, thus a resulting instance will not have any property.
+     * @param origin Not {@code null}. May be empty or may {@linkplain Map#keySet() contain}
+     *               a subset of the given keys.
+     * @throws NullPointerException     When an argument is {@code null}.
+     * @throws IllegalArgumentException When an original value does not meet the requirements of its associated key
+     *                                  or original keys are overhead.
+     */
+    public Mapped(final Collection<? extends K> keys, final Map<? extends K, ?> origin)
+            throws NullPointerException, IllegalArgumentException {
+
+        this(keys, origin, false);
     }
 
+    /**
+     * Initiates an instance directly through a given {@link Set} of keys representing its properties
+     * and an original {@link Map} containing the presumed values for those properties.
+     *
+     * @param keys           Not {@code null}. May be empty, thus a resulting instance will not have any property.
+     * @param origin         Not {@code null}. May be empty or may {@linkplain Map#keySet() contain}
+     *                       a subset of the given keys.
+     * @param ignoreOverhead <ul>
+     *                       <li>{@code true}: The original map may contain keys not present in the given set of keys.
+     *                       Those keys and their associated values will be ignored by the resulting instance.</li>
+     *                       <li>{@code false}: The original map may NOT contain keys not present in the given set of
+     *                       keys.</li>
+     *                       </ul>
+     * @throws NullPointerException     When an argument is {@code null}.
+     * @throws IllegalArgumentException When an original value does not meet the requirements of its associated key
+     *                                  or original keys are overhead but not ignorable.
+     */
     public Mapped(final Collection<? extends K> keys, final Map<? extends K, ?> origin, final boolean ignoreOverhead)
-            throws IllegalArgumentException {
+            throws NullPointerException, IllegalArgumentException {
 
-        this.backing = unmodifiableMap(copy(toSet(keys), origin, ignoreOverhead));
+        this.backing = unmodifiableMap(
+                copy(toSet(keys), origin, ignoreOverhead, keySet -> new HashMap<>(keySet.size())));
     }
 
-    public static <K extends Key> Builder<K, Mapped<K>> builder(final Collection<? extends K> keys) {
+    public static <K extends Key> Builder<K, Mapped<K>> builder(final Collection<? extends K> keys)
+            throws NullPointerException, IllegalArgumentException {
+
         return builder(keys, emptyMap());
     }
 
     public static <K extends Key> Builder<K, Mapped<K>> builder(
-            final Collection<? extends K> keys, final Map<? extends K, ?> origin) throws IllegalArgumentException {
+            final Collection<? extends K> keys, final Map<? extends K, ?> origin)
+            throws NullPointerException, IllegalArgumentException {
 
         return builder(keys, origin, false);
     }
 
+    /**
+     * Retrieves a new {@link Builder} through a given {@link Set} of keys representing its properties
+     * and an original {@link Map} containing the presumed values for those properties.
+     *
+     * @param keys           Not {@code null}. May be empty, thus a resulting instance will not have any property.
+     * @param origin         Not {@code null}. May be empty or may {@linkplain Map#keySet() contain}
+     *                       a subset of the given keys.
+     * @param ignoreOverhead <ul>
+     *                       <li>{@code true}: The original map may contain keys not present in the given set of keys.
+     *                       Those keys and their associated values will be ignored by the resulting instance.</li>
+     *                       <li>{@code false}: The original map may NOT contain keys not present in the given set of
+     *                       keys.</li>
+     *                       </ul>
+     * @throws NullPointerException     When an argument is {@code null}.
+     * @throws IllegalArgumentException When an original value does not meet the requirements of its associated key
+     *                                  or original keys are overhead but not ignorable.
+     */
     public static <K extends Key> Builder<K, Mapped<K>> builder(
             final Collection<? extends K> keys, final Map<? extends K, ?> origin, final boolean ignoreOverhead)
-            throws IllegalArgumentException {
+            throws NullPointerException, IllegalArgumentException {
 
-        return new Builder<>(keys, origin, template -> new Mapped<>(keys, template, false), ignoreOverhead);
+        return new Builder<>(keys, origin, template -> new Mapped<>(keys, template, true), ignoreOverhead);
     }
 
     private static <K extends Key> Map<K, Object> copy(
-            final Set<K> keySet, final Map<? extends K, ?> origin, final boolean ignoreOverhead)
+            final Set<K> keySet, final Map<? extends K, ?> origin, final boolean ignoreOverhead,
+            final Function<Set<K>, Map<K, Object>> newMap)
             throws IllegalArgumentException {
 
         if (ignoreOverhead || keySet.containsAll(origin.keySet())) {
             try {
-                final Map<K, Object> result = new HashMap<>(keySet.size());
+                final Map<K, Object> result = newMap.apply(keySet);
                 for (final K key : keySet) {
                     final Object value = origin.containsKey(key) ? origin.get(key) : key.getDefault();
                     result.put(key, cast(key, value));
@@ -134,7 +194,7 @@ public class Mapped<K extends Mapped.Key> {
                 throws IllegalArgumentException {
 
             this.keySet = unmodifiableSet(new HashSet<>(keys));
-            this.backing = copy(keySet, origin, ignoreOverhead);
+            this.backing = copy(keySet, origin, ignoreOverhead, keySet -> new HashMap<>(keySet.size()));
             this.function = function;
         }
 
