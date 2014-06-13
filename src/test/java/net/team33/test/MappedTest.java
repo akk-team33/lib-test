@@ -3,124 +3,88 @@ package net.team33.test;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Date;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
 
 public class MappedTest {
 
-    private static final EnumSet<Key> KEY_SET_00 = EnumSet.allOf(Key.class);
-    private static final EnumSet<Key> KEY_SET_01 = EnumSet.of(Key.STRING, Key.LIST, Key.INTEGER);
-    private static final EnumSet<Key> KEY_SET_02 = EnumSet.of(Key.STRING, Key.DOUBLE, Key.DATE);
+    private static final String VALUE_01 = "a string";
 
     @Test
-    public void testMapped_ContainsAnyInitialKey_01() {
-        final Map<Key, Object> original = Mapped.builder(KEY_SET_01)
-                .build()
-                .asMap();
+    public final void testGet_previously_set() {
+        final Subject subject = Subject.builder()
+                .set(Key.STRING, VALUE_01)
+                .build();
         Assert.assertEquals(
-                KEY_SET_00,
-                new Mapped<>(KEY_SET_00, original)
-                        .asMap()
-                        .keySet()
-        );
-    }
-
-    @Test
-    public void testMapped_ContainsAnyInitialKey_02() {
-        final Map<Key, Object> original = Mapped.builder(KEY_SET_02)
-                .set(Key.STRING, "a string")
-                .set(Key.DOUBLE, 3.141592654)
-                .build()
-                .asMap();
-        Assert.assertEquals(
-                KEY_SET_00,
-                new Mapped<>(KEY_SET_00, original)
-                        .asMap()
-                        .keySet()
+                VALUE_01,
+                subject.get(Key.STRING)
         );
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testMapped_ContainsAnyInitialKey_03() {
-        final Map<Key, Object> original = Mapped.builder(KEY_SET_02)
-                .set(Key.STRING, "a string")
-                .set(Key.DOUBLE, 3.141592654)
-                .build()
-                .asMap();
+    public final void testGet_foreign_key() {
+        final Subject subject = Subject.builder()
+                .set(Key.STRING, VALUE_01)
+                .build();
         Assert.assertEquals(
-                KEY_SET_01,
-                new Mapped<>(KEY_SET_01, original) // -> IllegalArgument
-                        .asMap()
-                        .keySet()
+                Key.INTEGER.getDefault(),
+                subject.get(Key.INTEGER)
         );
     }
 
-    @Test
-    public void testMapped_ContainsAnyInitialKey_04() {
-        final Map<Key, Object> original = Mapped.builder(KEY_SET_02)
-                .set(Key.STRING, "a string")
-                .set(Key.DOUBLE, 3.141592654)
-                .build()
-                .asMap();
-        Assert.assertEquals(
-                KEY_SET_01,
-                new Mapped<>(KEY_SET_01, original, true)
-                        .asMap()
-                        .keySet()
-        );
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testAsMap() throws Exception {
-        final Map<Key, Object> origin = Mapped.builder(KEY_SET_02)
-                .set(Key.STRING, "a string")
-                .set(Key.DOUBLE, 3.141592654)
-                .build().asMap();
-        Mapped.builder(KEY_SET_01, origin);
-    }
-
+    @SuppressWarnings({"ClassNameSameAsAncestorName", "EnumeratedClassNamingConvention"})
     private enum Key implements Mapped.Key {
+
         STRING {
             @Override
-            public final Class<String> getValueClass() {
+            public Class<String> getValueClass() {
                 return String.class;
             }
         },
         INTEGER {
             @Override
-            public final Class<Integer> getValueClass() {
+            public Class<Integer> getValueClass() {
                 return Integer.class;
-            }
-        },
-        DOUBLE {
-            @Override
-            public final Class<Double> getValueClass() {
-                return Double.class;
-            }
-        },
-        DATE {
-            @Override
-            public final Class<Date> getValueClass() {
-                return Date.class;
-            }
-        },
-        LIST {
-            @Override
-            public final Class<List> getValueClass() {
-                return List.class;
             }
         };
 
         @Override
-        public final boolean isNullable() {
+        public boolean isNullable() {
             return true;
         }
 
         @Override
-        public final Object getDefault() {
+        public Object getDefault() {
             return null;
+        }
+    }
+
+    private static class Subject extends EnumMapped<Key> {
+
+        Subject(final Collection<? extends MappedTest.Key> keys, final Map<? extends MappedTest.Key, ?> template) {
+            super(MappedTest.Key.class, keys, template);
+        }
+
+        static Builder builder() {
+            return new Builder();
+        }
+    }
+
+    @SuppressWarnings("ReturnOfThis")
+    private static class Builder extends EnumMapped.Mapper<Key, Builder> {
+        protected Builder() {
+            super(Key.class, EnumSet.of(Key.STRING), Collections.<Key, Object>emptyMap());
+        }
+
+        public Subject build() {
+            return new Subject(keySet(), asMap());
+        }
+
+        @Override
+        protected Builder self() {
+            return this;
         }
     }
 }
