@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -34,12 +35,45 @@ public class MappedTest {
     }
 
     @Test
+    public final void testSet_Map() {
+        final Map<Key, Object> origin = builder(Key.STRING, Key.INTEGER)
+                .set(Key.STRING, "a string")
+                .set(Key.INTEGER, 278)
+                .asMap();
+        Assert.assertEquals(
+                origin,
+                builder(Key.STRING, Key.INTEGER)
+                        .set(origin)
+                        .asMap()
+        );
+    }
+
+    @Test
+    public final void testReset_Map() {
+        final Map<Key, Object> expected = builder(Key.STRING, Key.INTEGER, Key.DATE)
+                .set(Key.STRING, "a string")
+                .set(Key.INTEGER, 278)
+                .asMap();
+        final Map<Key, Object> origin = builder(Key.STRING, Key.INTEGER)
+                .set(Key.STRING, "a string")
+                .set(Key.INTEGER, 278)
+                .asMap();
+        Assert.assertEquals(
+                expected,
+                builder(Key.STRING, Key.INTEGER, Key.DATE)
+                        .set(Key.DATE, new Date())
+                        .reset(origin)
+                        .asMap()
+        );
+    }
+
+    @Test
     public final void testGet_default() {
         final Subject subject = builder(Key.STRING, Key.INTEGER)
                 .set(Key.STRING, VALUE_01)
                 .build();
         Assert.assertEquals(
-                Key.INTEGER.getDefault(),
+                Key.INTEGER.getInitial(),
                 subject.get(Key.INTEGER)
         );
     }
@@ -50,7 +84,7 @@ public class MappedTest {
                 .set(Key.STRING, VALUE_01)
                 .build();
         Assert.assertEquals(
-                Key.INTEGER.getDefault(),
+                Key.INTEGER.getInitial(),
                 subject.get(Key.INTEGER)
         );
     }
@@ -70,6 +104,13 @@ public class MappedTest {
             public Class<Integer> getValueClass() {
                 return Integer.class;
             }
+        },
+
+        DATE {
+            @Override
+            public Class<Date> getValueClass() {
+                return Date.class;
+            }
         };
 
         @Override
@@ -78,7 +119,7 @@ public class MappedTest {
         }
 
         @Override
-        public Object getDefault() {
+        public Object getInitial() {
             return null;
         }
     }
@@ -98,7 +139,7 @@ public class MappedTest {
     }
 
     @SuppressWarnings("ReturnOfThis")
-    private static class Builder extends Mapped.Composer<MappedTest.Key, Builder> {
+    private static class Builder extends Mapped.Setter<Key, Builder> {
         private static final Map<? extends Key, ?> EMPTY_MAP = Collections.emptyMap();
 
         private final Set<Key> keys;
@@ -120,7 +161,7 @@ public class MappedTest {
         }
 
         @Override
-        protected Builder self() {
+        protected Builder finallyThis() {
             return this;
         }
 

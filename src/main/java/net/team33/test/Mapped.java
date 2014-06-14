@@ -32,7 +32,7 @@ public abstract class Mapped<K extends Mapped.Key> {
             for (final K key : keySet) {
                 final boolean containsKey = origin.containsKey(key);
                 if (reset || containsKey) {
-                    final Object value = containsKey ? origin.get(key) : key.getDefault();
+                    final Object value = containsKey ? origin.get(key) : key.getInitial();
                     result.put(key, valid(key, value));
                 }
             }
@@ -109,18 +109,18 @@ public abstract class Mapped<K extends Mapped.Key> {
         /**
          * Supplies a default value to be initially associated with this key.
          */
-        Object getDefault();
+        Object getInitial();
     }
 
     /**
-     * Abstracts a mutable counterpart to a {@link Mapped}
+     * Provides basic implementations of a mutable counterpart to a {@link Mapped}
      * intended to be derived as a Builder for a derivation of {@link Mapped}.
      *
      * @param <K> The specific type of the keys representing the properties.
-     * @param <B> The final derivation of this class
+     * @param <B> The final (relevant) derivation of this class
      */
     @SuppressWarnings("PublicInnerClass")
-    public abstract static class Composer<K extends Enum<K> & Key, B extends Composer<K, B>> {
+    public abstract static class Setter<K extends Key, B extends Setter<K, B>> {
 
         /**
          * Sets the {@code value} for a specific {@code key}, if it's part of the {@linkplain #keySet()
@@ -156,7 +156,7 @@ public abstract class Mapped<K extends Mapped.Key> {
             } else if (!ignoreOverhead) {
                 throw new IllegalArgumentException(format(ILLEGAL_KEY, key));
             }
-            return self();
+            return finallyThis();
         }
 
         /**
@@ -193,7 +193,7 @@ public abstract class Mapped<K extends Mapped.Key> {
          */
         public final B set(final Map<? extends K, ?> origin, final boolean ignoreOverhead) {
             copy(origin, keySet(), false, ignoreOverhead, asMap());
-            return self();
+            return finallyThis();
         }
 
         /**
@@ -201,7 +201,7 @@ public abstract class Mapped<K extends Mapped.Key> {
          * intended key set}. Otherwise throws an IllegalArgumentException.
          * <p/>
          * Values associated with keys not covered by the origin map will be reset to their
-         * {@linkplain Key#getDefault() defaults}.
+         * {@linkplain Key#getInitial() defaults}.
          *
          * @return {@code this} in its final representation.
          * @throws NullPointerException     if a {@code value} is {@code null} and the corresponding {@code key}
@@ -212,7 +212,7 @@ public abstract class Mapped<K extends Mapped.Key> {
          *                                  intended key set}.
          */
         public final B reset(final Map<? extends K, ?> origin) {
-            return set(origin, false);
+            return reset(origin, false);
         }
 
         /**
@@ -220,7 +220,7 @@ public abstract class Mapped<K extends Mapped.Key> {
          * intended key set}. Otherwise either ignores overhead values or throws an IllegalArgumentException.
          * <p/>
          * Values associated with keys not covered by the origin map will be reset to their
-         * {@linkplain Key#getDefault() defaults}.
+         * {@linkplain Key#getInitial() defaults}.
          *
          * @return {@code this} in its final representation.
          * @throws NullPointerException     if a {@code value} is {@code null} and the corresponding {@code key}
@@ -232,7 +232,7 @@ public abstract class Mapped<K extends Mapped.Key> {
          */
         public final B reset(final Map<? extends K, ?> origin, final boolean ignoreOverhead) {
             copy(origin, keySet(), true, ignoreOverhead, asMap());
-            return self();
+            return finallyThis();
         }
 
         /**
@@ -259,6 +259,6 @@ public abstract class Mapped<K extends Mapped.Key> {
         /**
          * Supplies {@code this} in its final representation.
          */
-        protected abstract B self();
+        protected abstract B finallyThis();
     }
 }
