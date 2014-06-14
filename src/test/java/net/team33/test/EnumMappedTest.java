@@ -21,13 +21,12 @@ public class EnumMappedTest {
 
     @Test
     public void test_EnumMapped_Map() {
-        final Map<Key, Object> template = builder(Key.STRING, Key.INTEGER)
+        final Builder template = builder(Key.STRING, Key.INTEGER)
                 .set(Key.STRING, "a string")
-                .set(Key.INTEGER, 278)
-                .asMap();
+                .set(Key.INTEGER, 278);
         final EnumMapped<Key> subject = new EnumMapped<>(template);
         Assert.assertEquals(
-                template,
+                template.asMap(),
                 subject.asMap()
         );
     }
@@ -36,7 +35,7 @@ public class EnumMappedTest {
     public void test_EnumMapped_Map__empty() {
         Assert.assertNull(
                 "Should not happen :-o",
-                new EnumMapped<>(EMPTY_MAP)
+                new EnumMapped<>(builder())
         );
     }
 
@@ -50,7 +49,7 @@ public class EnumMappedTest {
 
     @Test
     public void test_EnumMapped_Class_Map__Stuff_Empty() {
-        final EnumMapped<Key> subject = new EnumMapped<>(Key.class, EMPTY_MAP);
+        final EnumMapped<Key> subject = new EnumMapped<>(new Builder(Key.class));
         Assert.assertFalse(
                 "<subject> should not be empty",
                 subject.asMap().isEmpty()
@@ -88,7 +87,7 @@ public class EnumMappedTest {
                 .set(Key.STRING, "a string")
                 .set(Key.INTEGER, 278)
                 .asMap();
-        final EnumMapped<Key> subject = new EnumMapped<>(Key.class, template);
+        final EnumMapped<Key> subject = new EnumMapped<>(new Builder(Key.class).set(template));
         Assert.assertTrue(
                 "<subject> should contain each entries of <template>",
                 subject.asMap().entrySet().containsAll(template.entrySet())
