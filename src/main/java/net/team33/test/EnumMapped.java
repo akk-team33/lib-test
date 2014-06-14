@@ -20,7 +20,7 @@ public class EnumMapped<K extends Enum<K> & Mapped.Key> extends Mapped<K> {
                          final Collection<? extends K> keys,
                          final Map<? extends K, ?> template) {
 
-        backing = unmodifiableMap(copy(template, keys, false, new EnumMap<>(keyClass)));
+        backing = unmodifiableMap(copy(template, keys, true, false, new EnumMap<>(keyClass)));
     }
 
     @Override
@@ -43,7 +43,7 @@ public class EnumMapped<K extends Enum<K> & Mapped.Key> extends Mapped<K> {
 
         protected Mapper(final Class<K> keyClass, final EnumSet<K> keys, final Map<? extends K, ?> template) {
             this.keys = unmodifiableSet(copyOf(keys));
-            backing = copy(template, this.keys, true, new EnumMap<>(keyClass));
+            backing = copy(template, this.keys, true, true, new EnumMap<>(keyClass));
         }
 
         @Override
