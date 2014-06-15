@@ -19,10 +19,10 @@ public class EnumMapped<K extends Enum<K> & Mapped.Key> extends Mapped<K> {
     /**
      * Initiates a new instance backed by a copy of a given {@code setter}.
      *
-     * @throws NullPointerException   if the {@code setter} is {@code null}.
+     * @throws NullPointerException if the {@code setter} is {@code null}.
      */
-    protected EnumMapped(final Setter<K, ?> setter) {
-        backing = unmodifiableMap(new EnumMap<>(setter.backing));
+    protected EnumMapped(final Mapper<K, ?> mapper) {
+        backing = unmodifiableMap(new EnumMap<>(mapper.backing));
     }
 
     @Override
@@ -40,8 +40,8 @@ public class EnumMapped<K extends Enum<K> & Mapped.Key> extends Mapped<K> {
      * @param <B> The final (relevant) derivation of this class
      */
     @SuppressWarnings("PublicInnerClass")
-    public abstract static class Setter<K extends Enum<K> & Mapped.Key, B extends Setter<K, B>>
-            extends Mapped.Setter<K, B> {
+    public abstract static class Mapper<K extends Enum<K> & Mapped.Key, B extends Mapper<K, B>>
+            extends Mapped.Mutable<K, B> {
 
         private final Set<K> keys;
         private final EnumMap<K, Object> backing;
@@ -53,7 +53,7 @@ public class EnumMapped<K extends Enum<K> & Mapped.Key> extends Mapped<K> {
          * @param keyClass The {@linkplain Class class representation} of the intended keys, not {@code null}.
          * @throws NullPointerException if {@code keyClass} is {@code null}.
          */
-        protected Setter(final Class<K> keyClass) {
+        protected Mapper(final Class<K> keyClass) {
             this(keyClass, allOf(keyClass));
         }
 
@@ -65,7 +65,7 @@ public class EnumMapped<K extends Enum<K> & Mapped.Key> extends Mapped<K> {
          * @throws NullPointerException     if {@code keySet} is or contains {@code null}.
          * @throws IllegalArgumentException if {@code keySet} is empty and not an instance of {@link EnumSet}.
          */
-        protected Setter(final Collection<K> keySet) {
+        protected Mapper(final Collection<K> keySet) {
             this(keySet.iterator().next().getDeclaringClass(), keySet);
         }
 
@@ -74,7 +74,7 @@ public class EnumMapped<K extends Enum<K> & Mapped.Key> extends Mapped<K> {
          * @throws IllegalArgumentException if {@code keySet} is empty and not an instance of {@link EnumSet}.
          */
         @SuppressWarnings("unchecked")
-        private Setter(final Class<K> keyClass, final Collection<K> keySet) {
+        private Mapper(final Class<K> keyClass, final Collection<K> keySet) {
             this.keys = unmodifiableSet(copyOf(keySet));
             this.backing = copy(EMPTY_MAP, this.keys, true, true, new EnumMap<>(keyClass));
         }
@@ -87,7 +87,7 @@ public class EnumMapped<K extends Enum<K> & Mapped.Key> extends Mapped<K> {
         }
 
         @Override
-        protected final EnumMap<K, Object> asMap() {
+        public final EnumMap<K, Object> asMap() {
             // Intended to be modifiable ...
             // noinspection ReturnOfCollectionOrArrayField
             return backing;

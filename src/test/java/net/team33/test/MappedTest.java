@@ -19,30 +19,30 @@ public class MappedTest {
 
     private static final String VALUE_01 = "a string";
 
-    static Builder builder(Key... keys) {
+    static Builder builder(KEY... keys) {
         return new Builder(asList(keys));
     }
 
     @Test
     public final void testGet_previously_set() {
-        final Subject subject = builder(Key.STRING)
-                .set(Key.STRING, VALUE_01)
+        final Subject subject = builder(KEY.STRING)
+                .set(KEY.STRING, VALUE_01)
                 .build();
         Assert.assertEquals(
                 VALUE_01,
-                subject.get(Key.STRING)
+                subject.get(KEY.STRING)
         );
     }
 
     @Test
     public final void testSet_Map() {
-        final Map<Key, Object> origin = builder(Key.STRING, Key.INTEGER)
-                .set(Key.STRING, "a string")
-                .set(Key.INTEGER, 278)
+        final Map<KEY, Object> origin = builder(KEY.STRING, KEY.INTEGER)
+                .set(KEY.STRING, "a string")
+                .set(KEY.INTEGER, 278)
                 .asMap();
         Assert.assertEquals(
                 origin,
-                builder(Key.STRING, Key.INTEGER)
+                builder(KEY.STRING, KEY.INTEGER)
                         .set(origin)
                         .asMap()
         );
@@ -50,18 +50,18 @@ public class MappedTest {
 
     @Test
     public final void testReset_Map() {
-        final Map<Key, Object> expected = builder(Key.STRING, Key.INTEGER, Key.DATE)
-                .set(Key.STRING, "a string")
-                .set(Key.INTEGER, 278)
+        final Map<KEY, Object> expected = builder(KEY.STRING, KEY.INTEGER, KEY.DATE)
+                .set(KEY.STRING, "a string")
+                .set(KEY.INTEGER, 278)
                 .asMap();
-        final Map<Key, Object> origin = builder(Key.STRING, Key.INTEGER)
-                .set(Key.STRING, "a string")
-                .set(Key.INTEGER, 278)
+        final Map<KEY, Object> origin = builder(KEY.STRING, KEY.INTEGER)
+                .set(KEY.STRING, "a string")
+                .set(KEY.INTEGER, 278)
                 .asMap();
         Assert.assertEquals(
                 expected,
-                builder(Key.STRING, Key.INTEGER, Key.DATE)
-                        .set(Key.DATE, new Date())
+                builder(KEY.STRING, KEY.INTEGER, KEY.DATE)
+                        .set(KEY.DATE, new Date())
                         .reset(origin)
                         .asMap()
         );
@@ -69,28 +69,28 @@ public class MappedTest {
 
     @Test
     public final void testGet_default() {
-        final Subject subject = builder(Key.STRING, Key.INTEGER)
-                .set(Key.STRING, VALUE_01)
+        final Subject subject = builder(KEY.STRING, KEY.INTEGER)
+                .set(KEY.STRING, VALUE_01)
                 .build();
         Assert.assertEquals(
-                Key.INTEGER.getInitial(),
-                subject.get(Key.INTEGER)
+                KEY.INTEGER.getInitial(),
+                subject.get(KEY.INTEGER)
         );
     }
 
     @Test(expected = IllegalArgumentException.class)
     public final void testGet_foreign_key() {
-        final Subject subject = builder(Key.STRING)
-                .set(Key.STRING, VALUE_01)
+        final Subject subject = builder(KEY.STRING)
+                .set(KEY.STRING, VALUE_01)
                 .build();
         Assert.assertEquals(
-                Key.INTEGER.getInitial(),
-                subject.get(Key.INTEGER)
+                KEY.INTEGER.getInitial(),
+                subject.get(KEY.INTEGER)
         );
     }
 
     @SuppressWarnings({"ClassNameSameAsAncestorName", "EnumeratedClassNamingConvention"})
-    private enum Key implements Mapped.Key {
+    private enum KEY implements Mapped.Key {
 
         STRING {
             @Override
@@ -124,39 +124,38 @@ public class MappedTest {
         }
     }
 
-    private static class Subject extends Mapped<MappedTest.Key> {
+    private static class Subject extends Mapped<KEY> {
 
-        private final Map<MappedTest.Key, Object> backing;
+        private final Map<KEY, Object> backing;
 
-        private Subject(final Map<? extends MappedTest.Key, ?> template, final boolean ignoreOverhead) {
+        private Subject(final Map<? extends KEY, ?> template, final boolean ignoreOverhead) {
             backing = unmodifiableMap(copy(template, template.keySet(), true, ignoreOverhead, new HashMap<>(0)));
         }
 
         @Override
-        public final Map<MappedTest.Key, Object> asMap() {
+        public final Map<KEY, Object> asMap() {
             return backing;
         }
     }
 
     @SuppressWarnings("ReturnOfThis")
-    private static class Builder extends Mapped.Setter<Key, Builder> {
-        private static final Map<? extends Key, ?> EMPTY_MAP = Collections.emptyMap();
+    private static class Builder extends Mapped.Mutable<KEY, Builder> {
 
-        private final Set<Key> keys;
-        private final Map<Key, Object> backing;
+        private final Set<KEY> keys;
+        private final Map<KEY, Object> backing;
 
-        private Builder(final Collection<? extends Key> keys) {
+        private Builder(final Collection<? extends KEY> keys) {
             this.keys = unmodifiableSet(new HashSet<>(keys));
-            backing = Mapped.copy(EMPTY_MAP, this.keys, true, false, new HashMap<>(0));
+            backing = Mapped.copy(Collections.EMPTY_MAP, this.keys, true, false, new HashMap<>(0));
         }
 
         @Override
-        protected final Set<Key> keySet() {
+        protected final Set<KEY> keySet() {
             return keys;
         }
 
         @Override
-        protected final Map<Key, Object> asMap() {
+        public final Map<KEY, Object> asMap() {
             return backing;
         }
 

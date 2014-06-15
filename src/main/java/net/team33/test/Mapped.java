@@ -19,7 +19,8 @@ public abstract class Mapped<K extends Mapped.Key> {
     private static final String VALUE_IS_NULL = "<value> must not be <null>";
 
     /**
-     * Intended to initialize or update a map used as backing for a Mapped, a derivative or a relating Builder
+     * Intended to initialize or update a map used as backing for a Mapped, a derivative or a relating Builder.
+     *
      * @throws NullPointerException
      * @throws ClassCastException
      * @throws IllegalArgumentException
@@ -57,40 +58,74 @@ public abstract class Mapped<K extends Mapped.Key> {
     }
 
     /**
-     * Supplies an immutable Map representing the properties of this instance.
+     * Supplies a Map representing the properties of this instance.
+     * Commonly this Map may and should be immutable.
      */
     public abstract Map<K, Object> asMap();
 
     /**
-     * Retrieves the specified property value.
+     * Retrieves the specified property value. Intended to easily implement a property specific, well typed getter.
      *
      * @param key The property specification.
      * @throws NullPointerException     (optional)
      *                                  if {@code key} is {@code null} and {@code null} is not supported by the
      *                                  underlying map.
      * @throws IllegalArgumentException if the underlying map does not contain the specified {@code key}.
+     * @throws ClassCastException       if not applied in the correct class context.
      */
-    public final Object get(final K key) {
+    public final <T> T get(final K key) {
         if (asMap().containsKey(key)) {
-            return asMap().get(key);
+            // Causes a ClassCastException just like an explicit outer cast which otherwise were necessary ...
+            // noinspection unchecked
+            return (T) asMap().get(key);
         } else {
             throw new IllegalArgumentException(format(ILLEGAL_KEY, key));
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation assumes equality simply depending on the {@linkplain #asMap() underlying map}.
+     */
     @Override
     public final boolean equals(final Object obj) {
         return (this == obj) || ((obj instanceof Mapped<?>) && asMap().equals(((Mapped<?>) obj).asMap()));
     }
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation retrieves the hash code simply from the {@linkplain #asMap() underlying map}.
+     */
     @Override
     public final int hashCode() {
         return asMap().hashCode();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * The default implementation supplies the {@linkplain Map#toString() string representation} of the
+     * {@linkplain #asMap() underlying map}, prefixed by {@link #toStringPrefix()}.
+     * <p/>
+     * If desired a derivative may override (replace or modify) this implementation
+     * (or simply override {@link #toStringPrefix()}).
+     */
     @Override
-    public final String toString() {
-        return asMap().toString();
+    public String toString() {
+        return toStringPrefix() + asMap().toString();
+    }
+
+    /**
+     * Supplies a prefix used by {@link #toString()} (while not overridden itself).
+     * <p/>
+     * The default implementation supplies the simple name of this' {@linkplain #getClass() class representation}.
+     * <p/>
+     * If desired a derivative may override (replace or modify) this implementation.
+     */
+    protected String toStringPrefix() {
+        return getClass().getSimpleName();
     }
 
     @SuppressWarnings("InterfaceNamingConvention")
@@ -120,7 +155,15 @@ public abstract class Mapped<K extends Mapped.Key> {
      * @param <B> The final (relevant) derivation of this class
      */
     @SuppressWarnings("PublicInnerClass")
-    public abstract static class Setter<K extends Key, B extends Setter<K, B>> {
+    public abstract static class Mutable<K extends Key, B extends Mutable<K, B>> extends Mapped<K> {
+
+        /**
+         * {@inheritDoc}
+         * <p/>
+         * In contrast to the common specification, a Mutable implementation must supply a MUTABLE map!
+         */
+        @Override
+        public abstract Map<K, Object> asMap();
 
         /**
          * Sets the {@code value} for a specific {@code key}, if it's part of the {@linkplain #keySet()
@@ -236,25 +279,12 @@ public abstract class Mapped<K extends Mapped.Key> {
         }
 
         /**
-         * Supplies a convenient string representation.
-         */
-        @Override
-        public final String toString() {
-            return getClass().getName() + asMap().toString();
-        }
-
-        /**
          * Supplies the intended key set.
          * <p/>
          * Must be a separate immutable set - not simply the {@link Map#keySet()} for the {@linkplain #asMap()
          * underlying map} - otherwise expect strange side effects!
          */
         protected abstract Set<K> keySet();
-
-        /**
-         * Supplies the mutable (!) Map this instance is backed by.
-         */
-        protected abstract Map<K, Object> asMap();
 
         /**
          * Supplies {@code this} in its final representation.

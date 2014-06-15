@@ -9,22 +9,19 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
 
 public class EnumMappedTest {
 
-    private static final Map<? extends Key, ?> EMPTY_MAP = emptyMap();
-
-    private static Builder builder(final Key... keys) {
+    private static Builder builder(final KEY... keys) {
         return new Builder(asList(keys));
     }
 
     @Test
     public void test_EnumMapped_Map() {
-        final Builder template = builder(Key.STRING, Key.INTEGER)
-                .set(Key.STRING, "a string")
-                .set(Key.INTEGER, 278);
-        final EnumMapped<Key> subject = new EnumMapped<>(template);
+        final Builder template = builder(KEY.STRING, KEY.INTEGER)
+                .set(KEY.STRING, "a string")
+                .set(KEY.INTEGER, 278);
+        final EnumMapped<KEY> subject = new EnumMapped<>(template);
         Assert.assertEquals(
                 template.asMap(),
                 subject.asMap()
@@ -43,18 +40,18 @@ public class EnumMappedTest {
     public void test_EnumMapped_Map__null() {
         Assert.assertNull(
                 "Should not happen :-o",
-                new EnumMapped<Key>(null)
+                new EnumMapped<KEY>(null)
         );
     }
 
     @Test
     public void test_EnumMapped_Class_Map__Stuff_Empty() {
-        final EnumMapped<Key> subject = new EnumMapped<>(new Builder(Key.class));
+        final EnumMapped<KEY> subject = new EnumMapped<>(new Builder(KEY.class));
         Assert.assertFalse(
                 "<subject> should not be empty",
                 subject.asMap().isEmpty()
         );
-        for (final Key key : Key.values()) {
+        for (final KEY key : KEY.values()) {
             Assert.assertTrue(
                     "<subject> should contain key <" + key + ">",
                     subject.asMap().containsKey(key)
@@ -68,8 +65,8 @@ public class EnumMappedTest {
 
     @Test
     public void test_Mapper_Class() {
-        final Builder subject = new Builder(Key.class);
-        for (final Key key : Key.values()) {
+        final Builder subject = new Builder(KEY.class);
+        for (final KEY key : KEY.values()) {
             Assert.assertTrue(
                     "<subject> should contain key <" + key + ">",
                     subject.asMap().containsKey(key)
@@ -83,16 +80,16 @@ public class EnumMappedTest {
 
     @Test
     public void test_EnumMapped_Class_Map() {
-        final Map<Key, Object> template = builder(Key.STRING, Key.INTEGER)
-                .set(Key.STRING, "a string")
-                .set(Key.INTEGER, 278)
+        final Map<KEY, Object> template = builder(KEY.STRING, KEY.INTEGER)
+                .set(KEY.STRING, "a string")
+                .set(KEY.INTEGER, 278)
                 .asMap();
-        final EnumMapped<Key> subject = new EnumMapped<>(new Builder(Key.class).set(template));
+        final EnumMapped<KEY> subject = new EnumMapped<>(new Builder(KEY.class).set(template));
         Assert.assertTrue(
                 "<subject> should contain each entries of <template>",
                 subject.asMap().entrySet().containsAll(template.entrySet())
         );
-        for (final Key key : Key.values()) {
+        for (final KEY key : KEY.values()) {
             if (!template.containsKey(key)) {
                 Assert.assertTrue(
                         "<subject> should contain key <" + key + ">",
@@ -106,7 +103,7 @@ public class EnumMappedTest {
         }
     }
 
-    private enum Key implements Mapped.Key {
+    private enum KEY implements Mapped.Key {
         //IMPOSSIBLE(Object.class, false, null),
         STRING(String.class, false, ""),
         INTEGER(Integer.class, false, 0),
@@ -117,7 +114,7 @@ public class EnumMappedTest {
         private final boolean nullable;
         private final Object fallback;
 
-        Key(final Class<?> valueClass, final boolean nullable, final Object fallback) {
+        KEY(final Class<?> valueClass, final boolean nullable, final Object fallback) {
             this.valueClass = valueClass;
             this.nullable = nullable;
             this.fallback = fallback;
@@ -139,12 +136,12 @@ public class EnumMappedTest {
         }
     }
 
-    private static class Builder extends EnumMapped.Setter<Key, Builder> {
-        private Builder(final Collection<Key> keys) {
+    private static class Builder extends EnumMapped.Mapper<KEY, Builder> {
+        private Builder(final Collection<KEY> keys) {
             super(keys);
         }
 
-        private Builder(final Class<Key> keyClass) {
+        private Builder(final Class<KEY> keyClass) {
             super(keyClass);
         }
 
