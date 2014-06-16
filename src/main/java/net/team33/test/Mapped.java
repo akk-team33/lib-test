@@ -86,11 +86,24 @@ public abstract class Mapped<K extends Mapped.Key> {
     /**
      * {@inheritDoc}
      * <p/>
-     * This implementation assumes equality simply depending on the {@linkplain #asMap() underlying map}.
+     * This implementation assumes equality simply depending on {@linkplain #isTypeCompatible(Object)
+     * type compatibility} and the {@linkplain #asMap() underlying map}.
      */
+    @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
     @Override
     public final boolean equals(final Object obj) {
-        return (this == obj) || ((obj instanceof Mapped<?>) && asMap().equals(((Mapped<?>) obj).asMap()));
+        return (this == obj) || (isTypeCompatible(obj) && asMap().equals(((Mapped<?>) obj).asMap()));
+    }
+
+    /**
+     * Indicates the type compatibility between this and the other object.
+     * <p/>
+     * The base implementation assumes compatibility only if both are of the same class.
+     * <p/>
+     * A derivative may override to loose the restriction (think of reflexivity of equals())
+     */
+    protected boolean isTypeCompatible(final Object other) {
+        return (null != other) && getClass().equals(other.getClass());
     }
 
     /**
@@ -162,6 +175,7 @@ public abstract class Mapped<K extends Mapped.Key> {
          * <p/>
          * In contrast to the common specification, a Mutable implementation must supply a MUTABLE map!
          */
+        @SuppressWarnings("AbstractMethodOverridesAbstractMethod") // differing specification (java doc)
         @Override
         public abstract Map<K, Object> asMap();
 

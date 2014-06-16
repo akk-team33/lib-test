@@ -1,12 +1,12 @@
 package net.team33.test;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 
-import static java.util.Collections.EMPTY_MAP;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.EnumSet.allOf;
@@ -21,6 +21,7 @@ public class EnumMapped<K extends Enum<K> & Mapped.Key> extends Mapped<K> {
      *
      * @throws NullPointerException if the {@code setter} is {@code null}.
      */
+    @SuppressWarnings("AccessingNonPublicFieldOfAnotherObject")
     protected EnumMapped(final Mapper<K, ?> mapper) {
         backing = unmodifiableMap(new EnumMap<>(mapper.backing));
     }
@@ -75,8 +76,9 @@ public class EnumMapped<K extends Enum<K> & Mapped.Key> extends Mapped<K> {
          */
         @SuppressWarnings("unchecked")
         private Mapper(final Class<K> keyClass, final Collection<K> keySet) {
+            final Map<K, Object> emptyMap = Collections.emptyMap();
             this.keys = unmodifiableSet(copyOf(keySet));
-            this.backing = copy(EMPTY_MAP, this.keys, true, true, new EnumMap<>(keyClass));
+            this.backing = copy(emptyMap, keys, true, true, new EnumMap<>(keyClass));
         }
 
         @Override
@@ -86,6 +88,7 @@ public class EnumMapped<K extends Enum<K> & Mapped.Key> extends Mapped<K> {
             return keys;
         }
 
+        @SuppressWarnings("CollectionDeclaredAsConcreteClass")
         @Override
         public final EnumMap<K, Object> asMap() {
             // Intended to be modifiable ...
